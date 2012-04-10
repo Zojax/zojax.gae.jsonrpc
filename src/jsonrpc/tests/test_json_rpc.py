@@ -2,7 +2,7 @@
 #
 """Unit tests for the JSON-RPC request handles and helper functions."""
  
-from jsongae.json_rpc import *
+from jsonrpc.jsonrpc import *
 from google.appengine.ext.webapp import Request, Response
 import google.appengine.ext.webapp
 import logging
