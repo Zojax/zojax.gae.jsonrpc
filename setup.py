@@ -32,8 +32,8 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
         ],
     url='',
-    packages=find_packages(),
-    package_dir = {'': os.sep.join(['src', 'jsonrpc'])},
+    packages=find_packages('src'),
+    package_dir = {'': 'src'},
     include_package_data=True,
     install_requires=[
         'distribute',
