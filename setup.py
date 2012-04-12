@@ -2,7 +2,7 @@
 """Setup script."""
 
 import os
-from setuptools import setup, find_packages
+from distutils.core import setup
 
 
 def read(*rnames):
@@ -32,7 +32,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
         ],
     url='',
-    packages=find_packages('src'),
     package_dir = {'': 'src'},
     include_package_data=True,
     install_requires=[
