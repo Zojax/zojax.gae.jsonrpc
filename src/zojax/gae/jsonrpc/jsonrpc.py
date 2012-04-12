@@ -25,6 +25,7 @@ import json
 import sys
 import traceback
 
+import webapp2
 
 JSON_RPC_KEYS = frozenset(['method', 'jsonrpc', 'params', 'id'])
 
@@ -179,16 +180,13 @@ class JsonRpcMessage(object):
             logging.error('Encountered invalid json message')
 
 
-class JsonRpcHandler(webapp.RequestHandler):
+class JsonRpcHandler(webapp2.RequestHandler):
     """Subclass this handler to implement a JSON-RPC handler.
 
     Annotate methods with @ServiceMethod to expose them and make them callable
     via JSON-RPC. Currently methods with *args or **kwargs are not supported
     as service-methods. All parameters have to be named explicitly.
     """
-    
-    def __init__(self):
-        webapp.RequestHandler.__init__(self)
 
     def post(self):
         self.handle_request()
