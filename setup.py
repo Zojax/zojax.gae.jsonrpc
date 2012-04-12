@@ -34,6 +34,7 @@ setup(
     url='',
     package_dir = {'': 'src'},
     include_package_data=True,
+    namespace_packages=['zojax', 'zojax.gae'],
     install_requires=[
         'distribute',
     ],
