@@ -26,6 +26,7 @@ import traceback
 import webapp2
 import webob
 
+import webapp2
 
 JSON_RPC_KEYS = frozenset(['method', 'jsonrpc', 'params', 'id'])
 
