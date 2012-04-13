@@ -17,13 +17,14 @@ TODOs:
   - Factor out handler methods to reuse in other frameworks
 """
 
-from google.appengine.ext import webapp
 from inspect import getargspec
 import cgi
 import logging
 import json
 import sys
 import traceback
+import webapp2
+import webob
 
 
 JSON_RPC_KEYS = frozenset(['method', 'jsonrpc', 'params', 'id'])
@@ -40,7 +41,11 @@ def ServiceMethod(fn):
     TODO:
         - Warn when applied to underscore methods
     """
-
+    args, varargs, varkw, defaults = getargspec(fn)
+    if varargs or varkw:
+        raise InvalidParamsError(
+            "Service method definition must not have variable parameters")
+    fn.args = args
     fn.IsServiceMethod = True
     return fn
 
@@ -73,7 +78,7 @@ class JsonRpcError(Exception):
                 str(self.message))}
         return error
 
-        
+
 class ParseError(JsonRpcError):
     """Invalid JSON was received by the server.
 
@@ -122,6 +127,14 @@ class ServerError(JsonRpcError):
 
     code = -32000
     message = 'Server Error'
+
+
+class ForbiddenError(JsonRpcError):
+    """Forbidden Error"""
+
+    code = -403000
+    message = 'Forbidden'
+    status = 403
 
 
 class JsonRpcMessage(object):
@@ -179,23 +192,19 @@ class JsonRpcMessage(object):
             logging.error('Encountered invalid json message')
 
 
-class JsonRpcHandler(webapp.RequestHandler):
+class JsonRpcHandler(webapp2.RequestHandler):
     """Subclass this handler to implement a JSON-RPC handler.
 
     Annotate methods with @ServiceMethod to expose them and make them callable
     via JSON-RPC. Currently methods with *args or **kwargs are not supported
     as service-methods. All parameters have to be named explicitly.
     """
-    
-    def __init__(self):
-        webapp.RequestHandler.__init__(self)
 
     def post(self):
         self.handle_request()
 
     def handle_request(self):
         """Handles POST request."""
-
         self.response.headers['Content-Type'] = 'application/json-rpc'
         try:
             logging.debug("Raw JSON-RPC: %s", self.request.body)
@@ -204,7 +213,7 @@ class JsonRpcHandler(webapp.RequestHandler):
             logging.error(ex)
             self.error(ex.status)
             body = self._build_error(ex)
-            self.response.out.write(json.dumps(body))
+            self.response.write(json.dumps(body))
         else:
             for msg in messages:
                 self.handle_message(msg)
@@ -219,14 +228,14 @@ class JsonRpcHandler(webapp.RequestHandler):
                 #TODO Which http_status to set for batches?
                 self.error(200)
                 body = [r[1] for r in responses]
-                self.response.out.write(json.dumps(body))
+                self.response.write(json.dumps(body))
             else:
                 if len(responses) != 1:
                     # This should never happen
                     raise InternalError()   # pragma: no cover
                 status, body = responses[0]
                 self.error(status)
-                self.response.out.write(json.dumps(body))
+                self.response.write(json.dumps(body))
 
     def get_responses(self, messages):
         """Gets a list of responses from all 'messages'.
@@ -265,6 +274,10 @@ class JsonRpcHandler(webapp.RequestHandler):
             except (MethodNotFoundError, InvalidParamsError, ServerError), ex:
                 logging.error(ex)
                 msg.error = ex
+            except webob.exc.HTTPForbidden, ex:
+                logging.error("Forbidden")
+                ex = ForbiddenError("Forbidden")
+                msg.error = ex
             except Exception, ex:
                 logging.error(ex)
                 ex = InternalError("Error executing service method")
@@ -294,7 +307,6 @@ class JsonRpcHandler(webapp.RequestHandler):
             for obj in json_data:
                 msg = JsonRpcMessage(obj)
                 messages.append(msg)
-
         if isinstance(json_data, (dict)):
             batch_request = False
             msg = JsonRpcMessage(json_data)
@@ -314,7 +326,7 @@ class JsonRpcHandler(webapp.RequestHandler):
         if msg.notification:
             return None
         elif msg.error:
-            return (msg.error.status, 
+            return (msg.error.status,
                     self._build_error(msg.error, msg.message_id))
         elif msg.result:
             return (200, self._build_result(msg))
@@ -338,10 +350,7 @@ class JsonRpcHandler(webapp.RequestHandler):
         :param function method: A method object.
         :param params: List, tuple or dictionary with JSON-RPC parameters.
         """
-        args, varargs, varkw, defaults = getargspec(method)
-        if varargs or varkw:
-            raise InvalidParamsError(
-                "Service method definition must not have variable parameters")
+        args = method.args
         args_set = set(args[1:])
         if params is None:
             if not len(args_set) == 0:

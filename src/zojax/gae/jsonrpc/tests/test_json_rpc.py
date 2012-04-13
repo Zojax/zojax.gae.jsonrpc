@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
 """Unit tests for the JSON-RPC request handles and helper functions."""
- 
-from jsonrpc.jsonrpc import *
+
+from zojax.gae.jsonrpc.jsonrpc import *
 from google.appengine.ext.webapp import Request, Response
 import google.appengine.ext.webapp
 import logging
@@ -31,7 +31,7 @@ class JSONRPCHandlerFunctionalTest(unittest.TestCase):
             pass
         def noServiceMethod():
             pass
-            
+
     def exec_handler(self, body = None):
         """Used by each test to execute the minimal Testhandler."""
         h = self.MyTestHandler()
@@ -210,9 +210,6 @@ class JsonRpcHandlerTestCase(unittest.TestCase):
         @ServiceMethod
         def noParamsMethod(self):
             return 'nice'
-        @ServiceMethod
-        def variableParamsMethod(self, *args):
-            pass
 
     def setUp(self):
         """Set up the test with a simple TestHandler."""
@@ -220,7 +217,7 @@ class JsonRpcHandlerTestCase(unittest.TestCase):
         h.request = Request.blank('/rpc/')
         h.response = Response()
         self.handler = h
-    
+
     def getHandler(self):
         self.handler.response.clear()
         return self.handler
@@ -229,21 +226,21 @@ class JsonRpcHandlerTestCase(unittest.TestCase):
         # Regular processed message
         m1 = JsonRpcMessage()
         m1.result = 'Result'
-        
+
         #Msg with an error
         m2 = JsonRpcMessage()
         m2.error = ServerError('Something went wrong')
-        
+
         #notification
         m3 = JsonRpcMessage()
         m3.result = 'Notification result'
         m3.notification = True
-        
+
         msgs = [m1, m2, m3]
-        
+
         h = self.getHandler()
         exspect = [(200, {'jsonrpc': '2.0', 'result': 'Result', 'id': None}),
-            (500, {'jsonrpc': '2.0', 'id': None, 'error': 
+            (500, {'jsonrpc': '2.0', 'id': None, 'error':
                 {'message': 'ServerError: Something went wrong',
                  'code': -32000}})]
 
@@ -253,7 +250,7 @@ class JsonRpcHandlerTestCase(unittest.TestCase):
         """Test Wrong parameters for the given 'method'."""
         h = self.getHandler()
         rq  = '{"jsonrpc":"2.0", "method":"myMethod", "params":["A","B", "BAD"], "id":"1"}'
-        
+
         messages, dummy = h.parse_body(rq)
         msg = messages[0]
         h.handle_message(msg)
