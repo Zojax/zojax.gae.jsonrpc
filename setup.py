@@ -12,7 +12,7 @@ def read(*rnames):
 setup(
     name='zojax.gae.jsonrpc',
     version='0.1.0',
-    author="Yaroslav D.",
+    author="Zojax Developers",
     author_email='developers@zojax.com',
     description=("Implements JSON/RPC for Google App Engine (Python)."),
     long_description=(

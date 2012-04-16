@@ -15,15 +15,6 @@ Requirements
 Running Tests
 -------------
 
-In order to run all functional tests using buildout and nosetest enter the following command::
+In order to run all functional tests using nosetests enter the following command::
 
-  $ bin/nosetests -v --with-gae --gae-application=parts/jsonrpc
-
-
-Uploading and managing
-----------------------
-
-To upload application files, run::
-
-  $ ./bin/appcfg update parts/jsonrpc
-
+  $ nosetests -v --with-gae --gae-application=<path to GAE>
