@@ -3,8 +3,8 @@
 """Unit tests for the JSON-RPC request handles and helper functions."""
 
 from zojax.gae.jsonrpc.jsonrpc import *
-from google.appengine.ext.webapp import Request, Response
-import google.appengine.ext.webapp
+from webapp2 import Request, Response
+import webapp2
 import logging
 import simplejson
 import unittest
@@ -39,7 +39,7 @@ class JSONRPCHandlerFunctionalTest(unittest.TestCase):
         h.response = Response()
         h.request.body = body
         h.post()
-        return (h.response._Response__status[0], h.response.out.getvalue())
+        return (h.response.status_int, h.response.body)
 
     def test_positional_params(self):
         """Test rpc call with positional parameters."""
@@ -273,15 +273,6 @@ class JsonRpcHandlerTestCase(unittest.TestCase):
         msg = messages[0]
         h.handle_message(msg)
         self.assertEqual(msg.result, None)
-
-    def testVariableParams(self):
-        """Service method definitions must not have variable parameters."""
-        h = self.getHandler()
-        rq  = '''{"jsonrpc":"2.0", "method":"variableParamsMethod", "params":["A","B"], "id":"1"}'''
-        messages, dummy = h.parse_body(rq)
-        msg = messages[0]
-        h.handle_message(msg)
-        self.assertTrue(isinstance(msg.error, InvalidParamsError))
 
     def testInvalidParams(self):
         """Service methods expect the complete set of parameters."""

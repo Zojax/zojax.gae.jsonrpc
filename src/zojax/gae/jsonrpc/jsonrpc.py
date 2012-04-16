@@ -227,7 +227,7 @@ class JsonRpcHandler(webapp2.RequestHandler):
 
             if batch_request:
                 #TODO Which http_status to set for batches?
-                self.error(200)
+                #self.error(200)
                 body = [r[1] for r in responses]
                 self.response.write(json.dumps(body))
             else:
